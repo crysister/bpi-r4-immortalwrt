@@ -1,0 +1,100 @@
+#!/bin/sh
+# BPI-R4 fan control using raw PWM1 interface
+# The fan drive circuit is INVERTED: duty=10000 = fan OFF, duty=0 = fan FULL
+
+PWMCHIP=/sys/class/pwm/pwmchip0
+PWM=${PWMCHIP}/pwm1
+PERIOD=10000
+DEFAULT_OFF_TEMP=45000
+DEFAULT_ON_TEMP=75000
+DEFAULT_INTERVAL=5
+
+setup_pwm() {
+    [ -d "$PWM" ] || {
+        echo 1 > "$PWMCHIP/export" 2>/dev/null || return 1
+        sleep 1
+    }
+    [ -d "$PWM" ] || return 1
+    echo "$PERIOD" > "$PWM/period"
+    echo "normal" > "$PWM/polarity" 2>/dev/null
+    echo 1 > "$PWM/enable"
+    return 0
+}
+
+temp_to_duty() {
+    local temp=$1 off=$2 on=$3 duty
+    if [ "$temp" -le "$off" ]; then
+        duty=$PERIOD
+    elif [ "$temp" -ge "$on" ]; then
+        duty=0
+    else
+        duty=$(( PERIOD * (on - temp) / (on - off) ))
+    fi
+    [ "$duty" -lt 0 ] && duty=0
+    [ "$duty" -gt "$PERIOD" ] && duty=$PERIOD
+    echo "$duty"
+}
+
+read_uci_temp() {
+    local key=$1 def=$2 val
+    val=$(uci -q get "luci-fan.@luci-fan[0].$key" 2>/dev/null)
+    [ -n "$val" ] && echo $(( val * 1000 )) || echo "$def"
+}
+
+get_temp() {
+    cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null || echo 50000
+}
+
+daemon_loop() {
+    local temp duty last_duty=-1 off on interval mode enabled pct
+
+    while :; do
+        off=$(read_uci_temp off_temp $DEFAULT_OFF_TEMP)
+        on=$(read_uci_temp on_temp $DEFAULT_ON_TEMP)
+        interval=$(uci -q get "luci-fan.@luci-fan[0].poll_interval" 2>/dev/null)
+        [ -z "$interval" ] && interval=$DEFAULT_INTERVAL
+
+        enabled=$(uci -q get "luci-fan.@luci-fan[0].enabled" 2>/dev/null)
+        if [ "$enabled" = "0" ]; then
+            echo "$PERIOD" > "$PWM/duty_cycle" 2>/dev/null
+            sleep "$interval"
+            continue
+        fi
+
+        mode=$(uci -q get "luci-fan.@luci-fan[0].mode" 2>/dev/null)
+        case "$mode" in
+            turbo) duty=0 ;;
+            manual)
+                pct=$(uci -q get "luci-fan.@luci-fan[0].manual_pwm" 2>/dev/null)
+                [ -z "$pct" ] && pct=70
+                duty=$(( PERIOD * (100 - pct) / 100 ))
+                ;;
+            *)
+                temp=$(get_temp)
+                duty=$(temp_to_duty "$temp" "$off" "$on")
+                ;;
+        esac
+
+        if [ "$duty" != "$last_duty" ]; then
+            echo "$duty" > "$PWM/duty_cycle" 2>/dev/null
+            last_duty=$duty
+        fi
+
+        sleep "$interval"
+    done
+}
+
+case "$1" in
+    setup) setup_pwm ;;
+    daemon) setup_pwm || exit 1; daemon_loop ;;
+    status)
+        if [ -d "$PWM" ]; then
+            echo "PWM1: period=$(cat $PWM/period) duty=$(cat $PWM/duty_cycle) enable=$(cat $PWM/enable)"
+            t=$(get_temp)
+            echo "Temp: $t ($(awk "BEGIN {printf \"%.1f\", $t/1000}")C)"
+        else
+            echo "PWM1 not configured"
+        fi
+        ;;
+    *) echo "Usage: $0 {setup|daemon|status}"; exit 1 ;;
+esac
