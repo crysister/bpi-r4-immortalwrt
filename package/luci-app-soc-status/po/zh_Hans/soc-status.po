@@ -121,3 +121,6 @@ msgstr "调度优化"
 
 msgid "userspace"
 msgstr "用户空间"
+
+msgid "SoC Status"
+msgstr "SoC 状态"

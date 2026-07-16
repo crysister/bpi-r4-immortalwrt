@@ -1,6 +1,6 @@
 {
 	"admin/status/soc": {
-		"title": "SoC Status",
+		"title": "SoC 状态",
 		"order": 12,
 		"action": {
 			"type": "view",
