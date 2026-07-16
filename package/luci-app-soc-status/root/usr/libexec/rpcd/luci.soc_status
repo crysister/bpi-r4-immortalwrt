@@ -1,0 +1,212 @@
+#!/bin/sh
+
+# MT7988 SoC Status RPC backend for LuCI
+# CPU Frequency / HNAT / Thermal / Fan / Memory
+
+. /lib/functions.sh
+
+# ── Helpers ──
+
+read_safe() {
+	cat "$1" 2>/dev/null || echo "0"
+}
+
+fmt_khz() {
+	awk '{printf "%.0f MHz", $1/1000}' 2>/dev/null <<EOF
+$1
+EOF
+}
+
+celsius() {
+	awk '{printf "%.1f", $1/1000}' 2>/dev/null <<EOF
+$1
+EOF
+}
+
+# ── CPU ──
+
+read_cpu_block() {
+	local base="/sys/devices/system/cpu/cpufreq/policy0"
+
+	local cur_freq=0 hw_freq=0 governor="" avail_gov="" min_f=0 max_f=0 avail_f="" cores=0
+
+	[ -d "$base" ] && {
+		cur_freq=$(read_safe "$base/scaling_cur_freq")
+		hw_freq=$(read_safe "$base/cpuinfo_cur_freq")
+		governor=$(read_safe "$base/scaling_governor")
+		avail_gov=$(read_safe "$base/scaling_available_governors")
+		min_f=$(read_safe "$base/scaling_min_freq")
+		max_f=$(read_safe "$base/scaling_max_freq")
+		avail_f=$(read_safe "$base/scaling_available_frequencies")
+	}
+
+	cores=$(grep -c "^processor" /proc/cpuinfo 2>/dev/null || echo 4)
+
+	printf '"cpu_hw_freq":%d,"cpu_cur_freq":%d,"cpu_governor":"%s","cpu_avail_governors":"%s",' \
+		"$hw_freq" "$cur_freq" "$governor" "$avail_gov"
+	printf '"cpu_min_freq":%d,"cpu_max_freq":%d,"cpu_avail_freqs":"%s","cpu_cores":%d,' \
+		"$min_f" "$max_f" "$avail_f" "$cores"
+	printf '"cpu_arch":"%s",' "$(awk -F': ' '/model name/{print $2; exit}' /proc/cpuinfo 2>/dev/null || echo 'ARMv8')"
+	printf '"cpu_freq_label":"%s"' "$(fmt_khz "$hw_freq")"
+}
+
+# ── Thermal ──
+
+read_thermal_block() {
+	local cpu_temp="" zone0="/sys/class/thermal/thermal_zone0/temp"
+
+	cpu_temp=$(celsius "$(read_safe "$zone0")" 2>/dev/null || echo "")
+
+	printf '"thermal_cpu":"%s"' "${cpu_temp:-}"
+}
+
+# ── HNAT ──
+
+read_hnat_block() {
+	local hnat_stats="/sys/kernel/debug/hnat/hnat_stats"
+	local hook_toggle="/sys/kernel/debug/hnat/hook_toggle"
+	local qos_toggle="/sys/kernel/debug/hnat/qos_toggle"
+
+	local enabled="false" hook_val="0" qos_val="0"
+	local bound=0 total=0 raw
+
+	if [ -f "$hook_toggle" ]; then
+		raw=$(cat "$hook_toggle" 2>/dev/null || echo "0")
+		case "$raw" in *enable*|*1*) hook_val="1" ;; *) hook_val="0" ;; esac
+	fi
+	if [ -f "$qos_toggle" ]; then
+		raw=$(cat "$qos_toggle" 2>/dev/null || echo "0")
+		case "$raw" in *enable*|*1*) qos_val="1" ;; *) qos_val="0" ;; esac
+	fi
+	[ -d "/sys/kernel/debug/hnat" ] && enabled="true"
+
+	if [ -f "$hnat_stats" ]; then
+		bound=$(grep -c "^[0-9a-fA-F]" "$hnat_stats" 2>/dev/null || echo 0)
+	fi
+	if [ -d "/sys/kernel/debug/hnat" ]; then
+		total=$(grep -c "" "$hnat_stats" 2>/dev/null || echo 0)
+	fi
+
+	printf '"hnat_enabled":%s,"hnat_hook":%d,"hnat_qos":%d,"hnat_bound":%d,"hnat_total":%d' \
+		"$enabled" "$hook_val" "$qos_val" "$bound" "$total"
+}
+
+# ── Fan ──
+
+read_fan_block() {
+	local fan_json
+	fan_json=$(ubus call luci.fan getStatus 2>/dev/null || echo '{}')
+	printf '"fan":%s' "$fan_json"
+}
+
+# ── TurboACC / PPE ──
+
+read_ppe_block() {
+	local ppe_json
+	ppe_json=$(ubus call luci.turboacc getMTKPPEStat 2>/dev/null || echo '{}')
+	printf '"ppe":%s' "$ppe_json"
+}
+
+# ── Memory ──
+
+read_mem_block() {
+	local total=0 free=0 avail=0
+	total=$(awk '/^MemTotal:/{print $2*1024}' /proc/meminfo 2>/dev/null || echo 0)
+	avail=$(awk '/^MemAvailable:/{print $2*1024}' /proc/meminfo 2>/dev/null || echo 0)
+	free=$(awk '/^MemFree:/{print $2*1024}' /proc/meminfo 2>/dev/null || echo 0)
+
+	printf '"mem_total":%d,"mem_avail":%d,"mem_free":%d' "$total" "$avail" "$free"
+}
+
+# ── Uptime ──
+
+read_uptime_block() {
+	local up=0 idle=0
+	read -r up idle < /proc/uptime 2>/dev/null || true
+	printf '"uptime":%.0f,"idle":%.0f' "${up:-0}" "${idle:-0}"
+}
+
+# ── RPC Methods ──
+
+get_status() {
+	local turboacc
+	turboacc=$(ubus call luci.turboacc getSystemFeatures 2>/dev/null || echo '{}')
+
+	printf '{'
+	read_cpu_block
+	printf ','
+	read_thermal_block
+	printf ','
+	read_hnat_block
+	printf ','
+	read_mem_block
+	printf ','
+	read_uptime_block
+	printf ',"turboacc":%s,' "$turboacc"
+	read_fan_block
+	printf ','
+	read_ppe_block
+	printf '}'
+}
+
+get_hnat_stats() {
+	/usr/libexec/rpcd/hnat_parse
+}
+
+get_offload_stats() {
+	/usr/libexec/rpcd/offload_stats
+}
+
+get_cpu_usage() {
+	local stat f
+	stat=$(head -n1 /proc/stat 2>/dev/null)
+	set -- $stat
+	shift # skip "cpu"
+	local user=$1 nice=$2 system=$3 idle=$4 iowait=${5:-0} irq=${6:-0} sirq=${7:-0}
+	local total=$((user + nice + system + idle + iowait + irq + sirq))
+	local used=$((total - idle - iowait))
+	local pct=0
+	[ "$total" -gt 0 ] && pct=$((used * 100 / total))
+	printf '{"cpu_usage_pct":%d}' "$pct"
+}
+
+set_governor() {
+	local gov
+	gov=$(echo "$1" | jsonfilter -e '@.governor' 2>/dev/null)
+	[ -z "$gov" ] && { echo '{"error":"missing governor"}'; return; }
+	local avail
+	avail=$(read_safe /sys/devices/system/cpu/cpufreq/policy0/scaling_available_governors)
+	echo "$avail" | grep -qw "$gov" || { printf '{"error":"invalid governor: %s"}' "$gov"; return; }
+	echo "$gov" > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor 2>/dev/null && \
+		printf '{"result":"ok","governor":"%s"}' "$gov" || \
+		echo '{"error":"failed"}'
+}
+
+set_max_freq() {
+	local freq
+	freq=$(echo "$1" | jsonfilter -e '@.freq' 2>/dev/null)
+	[ -z "$freq" ] && { echo '{"error":"missing freq"}'; return; }
+	local avail
+	avail=$(read_safe /sys/devices/system/cpu/cpufreq/policy0/scaling_available_frequencies)
+	echo "$avail" | grep -qw "$freq" || { printf '{"error":"invalid frequency: %s"}' "$freq"; return; }
+	echo "$freq" > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq 2>/dev/null && \
+		printf '{"result":"ok","freq":%d}' "$freq" || \
+		echo '{"error":"failed"}'
+}
+
+case "$1" in
+	list)
+		echo '{"getStatus":{},"getHnatStats":{},"getOffloadStats":{},"getCpuUsage":{},"setGovernor":{"governor":"str"},"setMaxFreq":{"freq":"int"}}'
+		;;
+	call)
+		case "$2" in
+			getStatus)     get_status ;;
+			getHnatStats)  get_hnat_stats ;;
+			getOffloadStats) get_offload_stats ;;
+			getCpuUsage)   get_cpu_usage ;;
+			setGovernor)   read -r input; set_governor "$input" ;;
+			setMaxFreq)    read -r input; set_max_freq "$input" ;;
+			*) echo '{"error":"Invalid method"}' ;;
+		esac
+		;;
+esac

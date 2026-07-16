@@ -107,7 +107,7 @@
 #define GDMA1_FWD_CFG 0x500
 #define GDMA2_FWD_CFG 0x1500
 #if defined(CONFIG_MEDIATEK_NETSYS_V2)
-#if defined(CONFIG_MEDIATEK_NETSYS_RX_V2)
+#if defined(CONFIG_MEDIATEK_NETSYS_RX_V2) || defined(CONFIG_MEDIATEK_NETSYS_V2)
 #define PDMA_BASE               0x6000
 #else
 #define PDMA_BASE               0x4000
@@ -610,7 +610,7 @@ struct foe_entry {
  */
  
  
-#if defined(CONFIG_MEDIATEK_NETSYS_RX_V2)
+#if defined(CONFIG_MEDIATEK_NETSYS_RX_V2) || defined(CONFIG_MEDIATEK_NETSYS_V2)
 #define DEF_ETRY_NUM		32768
 /* feasible values : 32768, 16384, 8192, 4096, 2048, 1024 */
 #define DEF_ETRY_NUM_CFG	TABLE_32K

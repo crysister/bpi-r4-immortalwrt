@@ -236,7 +236,8 @@ return view.extend({
 		o.rmempty = false;
 		o.value(1);
 		o.value(2);
-		o.default = 2;
+		o.value(3);
+		o.default = 3;
 		o.depends('fastpath_mh_eth_hnat', '1');
 
 		o = s.option(form.ListValue, 'fullcone', _('Full cone NAT'),

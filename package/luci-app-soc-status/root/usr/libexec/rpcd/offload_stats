@@ -1,0 +1,24 @@
+#!/bin/sh
+awk -F'|' '
+/bytes=/ {
+  for(i=1;i<=NF;i++) {
+    if($i ~ /^bytes=/) b=substr($i,7)
+    if($i ~ /^packets=/) p=substr($i,9)
+    if($i ~ /^state=/) st=substr($i,7)
+    if($i ~ /^type=/) ty=substr($i,6)
+    if($i ~ /^vlan1=/) v1=substr($i,7)
+    if($i ~ /^etype=/) et=substr($i,7)
+  }
+  b+=0; p+=0; v1+=0
+  if(st=="BIND") {hb+=b; hp+=p; hn++} else {sb+=b; sp+=p; sn++}
+  if(ty~"HNAPT") hna++
+  if(ty~"IPV6") ip6++
+  if(v1>0) vl++
+  if(et!="0x0000"&&et!="") ppp++
+  total++
+}
+END {
+  tb=hb+sb; r=0; if(tb>0) r=int(hb*100/tb)
+  tp=hp+sp; pr=0; if(tp>0) pr=int(hp*100/tp)
+  printf "{\"hw_bytes\":%d,\"hw_pkts\":%d,\"hw_flows\":%d,\"sw_bytes\":%d,\"sw_pkts\":%d,\"sw_flows\":%d,\"offload_ratio\":%d,\"pkt_ratio\":%d,\"total_flows\":%d,\"hnapt\":%d,\"ipv6\":%d,\"vlan\":%d,\"pppoe\":%d}",hb,hp,hn,sb,sp,sn,r,pr,total,hna,ip6,vl,ppp
+}' /sys/kernel/debug/hnat/all_entry 2>/dev/null || echo '{}'

@@ -1,0 +1,18 @@
+#!/bin/sh
+ef=/sys/kernel/debug/hnat/hnat_entry
+sf=/sys/kernel/debug/hnat/hnat_stats
+pn=0; pj=; i=0
+[ -f "$sf" ] && { pn=$(sed -n 's/^PPE_NUM=//p' "$sf"); while [ "$i" -lt "${pn:-0}" ]; do
+  a=$(sed -n "s/^ALL_PPE${i}=//p" "$sf"); b=$(sed -n "s/^BIND_PPE${i}=//p" "$sf")
+  [ -n "$pj" ] && pj="${pj},"; pj="${pj}{\"id\":${i},\"total\":${a:-0},\"bind\":${b:-0}}"; i=$((i+1))
+done; }
+fj=; fc=0; pe=-1
+[ -f "$ef" ] && while IFS= read -r line; do case "$line" in
+  "PPE_ID = "*) pe=${line#PPE_ID = } ;;
+  NAPT\(*\):*) ix=$(echo "$line"|sed 's/^NAPT(\([0-9]*\)).*/\1/')
+    ow=$(echo "$line"|sed 's/.*: \([^ ]*->[^ ]*\) =>.*/\1/'); os=${ow%%->*}; od=${ow##*->}
+    ow=$(echo "$line"|sed 's/.*=> \([^ ]*->[^ ]*\)/\1/'); ws=${ow%%->*}; wd=${ow##*->}
+    [ -n "$fj" ] && fj="${fj},"; fj="${fj}{\"ppe\":${pe},\"idx\":\"${ix}\",\"orig\":\"${os}\",\"reply\":\"${od}\",\"nat\":\"${ws}\",\"dest\":\"${wd}\"}"
+    fc=$((fc+1)); [ "$fc" -ge 100 ] && break ;;
+esac; done < "$ef"
+printf '{"ppe_summary":[%s],"flows":[%s],"flow_count":%d}' "$pj" "$fj" "$fc"

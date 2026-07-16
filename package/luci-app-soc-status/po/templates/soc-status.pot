@@ -1,0 +1,123 @@
+msgid ""
+msgstr ""
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "Active"
+msgstr ""
+
+msgid "Byte Offload Ratio"
+msgstr ""
+
+msgid "CPU Frequency"
+msgstr ""
+
+msgid "CPU Load"
+msgstr ""
+
+msgid "CPU Temp"
+msgstr ""
+
+msgid "Fan"
+msgstr ""
+
+msgid "Governor"
+msgstr ""
+
+msgid "HNAT Flow Entries"
+msgstr ""
+
+msgid "Max"
+msgstr ""
+
+msgid "Memory"
+msgstr ""
+
+msgid "MT7988 SoC Status"
+msgstr ""
+
+msgid "NAT To"
+msgstr ""
+
+msgid "No active offload flows"
+msgstr ""
+
+msgid "Off"
+msgstr ""
+
+msgid "Offload Engine"
+msgstr ""
+
+msgid "Original"
+msgstr ""
+
+msgid "Packet Ratio"
+msgstr ""
+
+msgid "Reply To"
+msgstr ""
+
+msgid "System Resources"
+msgstr ""
+
+msgid "Thermal & Fan"
+msgstr ""
+
+msgid "Uptime"
+msgstr ""
+
+msgid "Capacity"
+msgstr ""
+
+msgid "Flows/Bound"
+msgstr ""
+
+msgid "Hardware NAT / PPE Offload Engine"
+msgstr ""
+
+msgid "Hook"
+msgstr ""
+
+msgid "HW Flows"
+msgstr ""
+
+msgid "MediaTek HNAT"
+msgstr ""
+
+msgid "OFF"
+msgstr ""
+
+msgid "ON"
+msgstr ""
+
+msgid "Profile"
+msgstr ""
+
+msgid "QoS"
+msgstr ""
+
+msgid "SW Flows"
+msgstr ""
+
+msgid "Standby"
+msgstr ""
+
+msgid "Transition"
+msgstr ""
+
+msgid "conservative"
+msgstr ""
+
+msgid "ondemand"
+msgstr ""
+
+msgid "performance"
+msgstr ""
+
+msgid "powersave"
+msgstr ""
+
+msgid "schedutil"
+msgstr ""
+
+msgid "userspace"
+msgstr ""

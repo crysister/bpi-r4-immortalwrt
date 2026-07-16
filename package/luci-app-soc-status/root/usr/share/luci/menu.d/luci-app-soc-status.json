@@ -1,0 +1,13 @@
+{
+	"admin/status/soc": {
+		"title": "SoC Status",
+		"order": 12,
+		"action": {
+			"type": "view",
+			"path": "soc_status/status"
+		},
+		"depends": {
+			"acl": [ "luci-app-soc-status" ]
+		}
+	}
+}

@@ -1,0 +1,123 @@
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "Active"
+msgstr "活跃"
+
+msgid "Byte Offload Ratio"
+msgstr "字节卸载率"
+
+msgid "CPU Frequency"
+msgstr "CPU 频率"
+
+msgid "CPU Load"
+msgstr "CPU 负载"
+
+msgid "CPU Temp"
+msgstr "CPU 温度"
+
+msgid "Fan"
+msgstr "风扇"
+
+msgid "Governor"
+msgstr "调度器"
+
+msgid "HNAT Flow Entries"
+msgstr "HNAT 流表"
+
+msgid "Max"
+msgstr "最大"
+
+msgid "Memory"
+msgstr "内存"
+
+msgid "MT7988 SoC Status"
+msgstr "MT7988 SoC 状态"
+
+msgid "NAT To"
+msgstr "NAT 目标"
+
+msgid "No active offload flows"
+msgstr "暂无活跃卸载流"
+
+msgid "Off"
+msgstr "关闭"
+
+msgid "Offload Engine"
+msgstr "卸载引擎"
+
+msgid "Original"
+msgstr "原始连接"
+
+msgid "Packet Ratio"
+msgstr "数据包卸载率"
+
+msgid "Reply To"
+msgstr "回复目标"
+
+msgid "System Resources"
+msgstr "系统资源"
+
+msgid "Thermal & Fan"
+msgstr "温度与风扇"
+
+msgid "Uptime"
+msgstr "运行时间"
+
+msgid "Capacity"
+msgstr "容量"
+
+msgid "Flows/Bound"
+msgstr "流/绑定"
+
+msgid "Hardware NAT / PPE Offload Engine"
+msgstr "硬件 NAT / PPE 卸载引擎"
+
+msgid "Hook"
+msgstr "Hook"
+
+msgid "HW Flows"
+msgstr "硬件流"
+
+msgid "MediaTek HNAT"
+msgstr "MediaTek HNAT"
+
+msgid "OFF"
+msgstr "关闭"
+
+msgid "ON"
+msgstr "开启"
+
+msgid "Profile"
+msgstr "设备配置"
+
+msgid "QoS"
+msgstr "QoS"
+
+msgid "SW Flows"
+msgstr "软件流"
+
+msgid "Standby"
+msgstr "待机"
+
+msgid "Transition"
+msgstr "过渡中"
+
+msgid "conservative"
+msgstr "保守"
+
+msgid "ondemand"
+msgstr "按需"
+
+msgid "performance"
+msgstr "性能"
+
+msgid "powersave"
+msgstr "省电"
+
+msgid "schedutil"
+msgstr "调度优化"
+
+msgid "userspace"
+msgstr "用户空间"

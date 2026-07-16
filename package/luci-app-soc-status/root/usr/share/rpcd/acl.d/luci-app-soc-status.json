@@ -1,0 +1,33 @@
+{
+	"luci-app-soc-status": {
+		"description": "Grant access to MT7988 SoC status (CPU, HNAT, Thermal, Fan)",
+		"read": {
+			"ubus": {
+				"luci.soc_status": [ "getStatus", "getHnatStats", "getOffloadStats", "getCpuUsage" ],
+				"luci.fan": [ "getStatus" ],
+				"luci.turboacc": [ "getSystemFeatures", "getFastPathStat", "getMTKPPEStat" ]
+			},
+			"file": {
+				"/sys/kernel/debug/hnat/*": [ "read" ],
+				"/sys/kernel/debug/hnat/hnat_stats": [ "read" ],
+				"/sys/kernel/debug/hnat/hook_toggle": [ "read" ],
+				"/sys/kernel/debug/hnat/qos_toggle": [ "read" ],
+				"/sys/devices/system/cpu/cpufreq/policy0/*": [ "read" ],
+				"/sys/class/thermal/thermal_zone0/*": [ "read" ],
+				"/sys/class/hwmon/*/*": [ "read" ],
+				"/proc/meminfo": [ "read" ],
+				"/proc/uptime": [ "read" ],
+				"/proc/stat": [ "read" ]
+			}
+		},
+		"write": {
+			"ubus": {
+				"luci.soc_status": [ "setGovernor", "setMaxFreq" ]
+			},
+			"file": {
+				"/sys/devices/system/cpu/cpufreq/policy0/scaling_governor": [ "write" ],
+				"/sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq": [ "write" ]
+			}
+		}
+	}
+}
