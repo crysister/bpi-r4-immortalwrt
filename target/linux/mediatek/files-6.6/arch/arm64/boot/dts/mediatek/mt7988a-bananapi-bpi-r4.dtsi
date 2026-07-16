@@ -99,7 +99,6 @@
 &gsw_phy0 {
 	pinctrl-names = "gbe-led";
 	pinctrl-0 = <&gbe0_led0_pins>;
-		mediatek,led-config = <0x24 0x8007 0x25 0x003f>;
 };
 
 &gsw_port0 {
@@ -114,7 +113,6 @@
 &gsw_phy1 {
 	pinctrl-names = "gbe-led";
 	pinctrl-0 = <&gbe1_led0_pins>;
-		mediatek,led-config = <0x24 0x8007 0x25 0x003f>;
 };
 
 &gsw_phy1_led0 {
@@ -125,7 +123,6 @@
 &gsw_phy2 {
 	pinctrl-names = "gbe-led";
 	pinctrl-0 = <&gbe2_led0_pins>;
-		mediatek,led-config = <0x24 0x8007 0x25 0x003f>;
 };
 
 &gsw_phy2_led0 {
@@ -136,7 +133,6 @@
 &gsw_phy3 {
 	pinctrl-names = "gbe-led";
 	pinctrl-0 = <&gbe3_led0_pins>;
-		mediatek,led-config = <0x24 0x8007 0x25 0x003f>;
 };
 
 &gsw_phy3_led0 {
@@ -416,4 +412,10 @@
 
 &lvts {
 	status = "okay";
+};
+
+&switch {
+        mdio {
+                mediatek,led-config = <0x24 0x8007 0x25 0x003f>;
+        };
 };
