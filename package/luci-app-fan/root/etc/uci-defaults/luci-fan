@@ -12,12 +12,12 @@ uci -q get 'luci-fan.@luci-fan[0].max_rpm' >/dev/null 2>&1 || uci -q set 'luci-f
 current_on=$(uci -q get 'luci-fan.@luci-fan[0].on_temp' 2>/dev/null)
 current_off=$(uci -q get 'luci-fan.@luci-fan[0].off_temp' 2>/dev/null)
 
-if [ -z "$current_on" ] || [ "$current_on" = '55' ]; then
-	uci -q set 'luci-fan.@luci-fan[0].on_temp=60'
+if [ -z "$current_on" ] || [ "$current_on" = '55' ] || [ "$current_on" = '60' ]; then
+	uci -q set 'luci-fan.@luci-fan[0].on_temp=75'
 fi
 
-if [ -z "$current_off" ] || [ "$current_off" = '50' ]; then
-	uci -q set 'luci-fan.@luci-fan[0].off_temp=30'
+if [ -z "$current_off" ] || [ "$current_off" = '50' ] || [ "$current_off" = '30' ]; then
+	uci -q set 'luci-fan.@luci-fan[0].off_temp=45'
 fi
 
 current_poll=$(uci -q get 'luci-fan.@luci-fan[0].poll_interval' 2>/dev/null)

@@ -313,7 +313,7 @@
 &fan {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pwm0_pins>;
-	pwms = <&pwm 0 50000>;
+	pwms = <&pwm 0 40000>;
 	status = "okay";
 };
 
