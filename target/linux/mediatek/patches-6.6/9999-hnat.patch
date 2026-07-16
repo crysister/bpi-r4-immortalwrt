@@ -121,11 +121,7 @@ diff -u -r a/drivers/net/phy/mediatek/mtk-phy-lib.c b/drivers/net/phy/mediatek/m
 +		 * cable. Also, LP_DETECTED will be cleared after AN complete.
 +		 */
 +		if (!FIELD_GET(MTK_PHY_LP_DETECTED_MASK, ret)){
-+			if (phydev->link !=1){
-+                        	phydev->link = 1;
-+                        	phydev->speed = SPEED_1000;
-+                        	phydev->duplex = DUPLEX_FULL;
-+			}
++				/* No link partner - keep genphy result */
 +			return 0;
 +		}
 +
